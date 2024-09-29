@@ -116,6 +116,8 @@ M.remove_rule = function(pair)
                 table.insert(state_tbl, r)
             elseif r.key_map and r.key_map ~= '' then
                 api.nvim_buf_del_keymap(0, 'i', r.key_map)
+                -- add terminal mode mapping
+                api.nvim_buf_del_keymap(0, 't', r.key_map)
             end
         end
         M.set_buf_rule(state_tbl, 0)
@@ -268,6 +270,13 @@ M.on_attach = function(bufnr)
             desc = "autopairs map key",
             callback = function() return M.autopairs_map(bufnr, key) end,
         })
+        -- add terminal mode mapping
+        api.nvim_buf_set_keymap(bufnr, 't', key, '', {
+            expr = true,
+            noremap = true,
+            desc = "autopairs map key",
+            callback = function() return M.autopairs_map(bufnr, key) end,
+        })
         table.insert(autopairs_keymaps, key)
     end
     for _, rule in pairs(rules) do
@@ -312,12 +321,28 @@ M.on_attach = function(bufnr)
             "<esc>l<cmd>lua require('nvim-autopairs.fastwrap').show()<cr>",
             { noremap = true }
         )
+        -- add terminal mode mapping
+        api.nvim_buf_set_keymap(
+            bufnr,
+            't',
+            M.config.fast_wrap.map,
+            "<esc>l<cmd>lua require('nvim-autopairs.fastwrap').show()<cr>",
+            { noremap = true }
+        )
     end
 
     if M.config.map_bs then
         api.nvim_buf_set_keymap(
             bufnr,
             'i',
+            '<bs>',
+            '',
+            { callback = M.autopairs_bs, expr = true, noremap = true }
+        )
+        -- add terminal mode mapping
+        api.nvim_buf_set_keymap(
+            bufnr,
+            't',
             '<bs>',
             '',
             { callback = M.autopairs_bs, expr = true, noremap = true }
@@ -332,12 +357,28 @@ M.on_attach = function(bufnr)
             '',
             { callback = M.autopairs_c_h, expr = true, noremap = true }
         )
+        -- add terminal mode mapping
+        api.nvim_buf_set_keymap(
+            bufnr,
+            "t",
+            utils.key.c_h,
+            '',
+            { callback = M.autopairs_c_h, expr = true, noremap = true }
+        )
     end
 
     if M.config.map_c_w then
         api.nvim_buf_set_keymap(
             bufnr,
             'i',
+            '<c-w>',
+            '',
+            { callback = M.autopairs_c_w, expr = true, noremap = true }
+        )
+        -- add terminal mode mapping
+        api.nvim_buf_set_keymap(
+            bufnr,
+            't',
             '<c-w>',
             '',
             { callback = M.autopairs_c_w, expr = true, noremap = true }
@@ -382,7 +423,9 @@ local autopairs_delete = function(bufnr, key)
                 for _ = 1, api.nvim_strwidth(rule.end_pair), 1 do
                     input = input .. utils.key.del
                 end
-                return utils.esc('<c-g>U' .. input)
+                --return utils.esc('<c-g>U' .. input)
+                -- changed, otherwise in terminal mode deleting a left bracket does not also auto-remove the right pair
+                return utils.esc(input)
             end
         end
     end
@@ -390,7 +433,9 @@ local autopairs_delete = function(bufnr, key)
 end
 
 M.autopairs_c_w = function(bufnr)
-    return autopairs_delete(bufnr, '<c-g>U<c-w>')
+    --return autopairs_delete(bufnr, '<c-g>U<c-w>')
+    -- changed, otherwise in terminal mode deleting a left bracket does not also auto-remove the right pair
+    return autopairs_delete(bufnr, '<c-w>')
 end
 
 M.autopairs_c_h = function(bufnr)
@@ -662,6 +707,13 @@ end
 M.map_cr = function()
     api.nvim_set_keymap(
         'i',
+        '<CR>',
+        "v:lua.require'nvim-autopairs'.completion_confirm()",
+        { expr = true, noremap = true }
+    )
+    -- add terminal mode mapping
+    api.nvim_set_keymap(
+        't',
         '<CR>',
         "v:lua.require'nvim-autopairs'.completion_confirm()",
         { expr = true, noremap = true }

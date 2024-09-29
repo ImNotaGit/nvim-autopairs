@@ -8,10 +8,15 @@ M.key = {
     c_h = "<C-h>",
     left = "<left>",
     right = "<right>",
-    join_left = "<c-g>U<left>",
-    join_right = "<c-g>U<right>",
-    undo_sequence = "<c-g>u",
-    noundo_sequence = "<c-g>U",
+    --join_left = "<c-g>U<left>",
+    --join_right = "<c-g>U<right>",
+    --undo_sequence = "<c-g>u",
+    --noundo_sequence = "<c-g>U",
+    -- changed to make things work in terminal mode
+    join_left = "<left>",
+    join_right = "<right>",
+    undo_sequence = "",
+    noundo_sequence = "",
     abbr = "<c-]>"
 }
 
